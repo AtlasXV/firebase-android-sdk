@@ -15,7 +15,6 @@
 package com.google.firebase.gradle.plugins.publish;
 
 import com.google.firebase.gradle.plugins.FirebaseLibraryExtension;
-import java.io.File;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -113,10 +112,7 @@ public class PublishingPlugin implements Plugin<Project> {
                         repos ->
                             repos.maven(
                                 repo -> {
-                                  String s = sub.getRootProject().getBuildDir() + "/m2repository";
-                                  File file = new File(s);
-                                  repo.setUrl(file.toURI());
-                                  repo.setName("BuildDir");
+                                  AtlasvPublishConfig.configPublishRepo(project, repo);
                                 }));
                     publishing.publications(
                         publications -> {

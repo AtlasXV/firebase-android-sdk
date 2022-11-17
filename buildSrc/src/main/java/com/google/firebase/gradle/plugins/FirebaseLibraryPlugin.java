@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.firebase.gradle.plugins.ci.Coverage;
 import com.google.firebase.gradle.plugins.ci.device.FirebaseTestServer;
 import com.google.firebase.gradle.plugins.license.LicenseResolverPlugin;
+import com.google.firebase.gradle.plugins.publish.AtlasvPublishConfig;
 import java.io.File;
 import java.nio.file.Paths;
 import kotlin.Unit;
@@ -268,10 +269,7 @@ public class FirebaseLibraryPlugin implements Plugin<Project> {
               repos ->
                   repos.maven(
                       repo -> {
-                        String s = project.getRootProject().getBuildDir() + "/m2repository";
-                        File file = new File(s);
-                        repo.setUrl(file.toURI());
-                        repo.setName("BuildDir");
+                        AtlasvPublishConfig.configPublishRepo(project, repo);
                       }));
           publishing.publications(
               publications ->

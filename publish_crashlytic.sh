@@ -1,0 +1,1 @@
+./gradlew -PprojectsToPublish=":firebase-crashlytics" -PpublishMode=RELEASE publishProjectsToBuildDir
