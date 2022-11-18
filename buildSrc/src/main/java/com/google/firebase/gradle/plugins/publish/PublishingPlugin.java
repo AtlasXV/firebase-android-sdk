@@ -23,7 +23,6 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.publish.maven.MavenPublication;
-import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * Enables releasing of the SDKs.
@@ -134,59 +133,15 @@ public class PublishingPlugin implements Plugin<Project> {
                           t.dependsOn(getPublishTask(toPublish, "MavenLocal"));
                         }
                       });
-              Task publishProjectsToBuildDir =
-                  project
-                      .getTasks()
-                      .create(
-                          "publishProjectsToBuildDir",
-                          t -> {
-                            for (FirebaseLibraryExtension toPublish : projectsToPublish) {
-                              t.dependsOn(getPublishTask(toPublish, "BuildDirRepository"));
-                              t.dependsOn(toPublish.getPath() + ":kotlindoc");
-                            }
-                          });
-              Zip buildMavenZip =
-                  project
-                      .getTasks()
-                      .create(
-                          "buildMavenZip",
-                          Zip.class,
-                          zip -> {
-                            zip.dependsOn(publishProjectsToBuildDir);
-                            zip.getArchiveFileName().set("m2repository.zip");
-                            zip.getDestinationDirectory().set(project.getBuildDir());
-                            zip.from(project.getBuildDir() + "/m2repository");
-                          });
-              Zip buildKotlindocZip =
-                  project
-                      .getTasks()
-                      .create(
-                          "buildKotlindocZip",
-                          Zip.class,
-                          zip -> {
-                            zip.dependsOn(publishProjectsToBuildDir);
-                            zip.getArchiveFileName().set("kotlindoc.zip");
-                            zip.getDestinationDirectory().set(project.getBuildDir());
-                            zip.from(project.getBuildDir() + "/firebase-kotlindoc");
-                          });
-              Task info =
-                  project
-                      .getTasks()
-                      .create(
-                          "publishPrintInfo",
-                          t ->
-                              publishAllToLocal.doLast(
-                                  it ->
-                                      project
-                                          .getLogger()
-                                          .lifecycle(
-                                              "Publishing the following libraries:\n{}",
-                                              projectsToPublish.stream()
-                                                  .map(FirebaseLibraryExtension::getPath)
-                                                  .collect(Collectors.joining("\n")))));
-              buildMavenZip.mustRunAfter(info);
-              buildKotlindocZip.mustRunAfter(info);
-              firebasePublish.dependsOn(info, buildMavenZip, buildKotlindocZip);
+              project
+                  .getTasks()
+                  .create(
+                      "publishProjectsToBuildDir",
+                      t -> {
+                        for (FirebaseLibraryExtension toPublish : projectsToPublish) {
+                          t.dependsOn(getPublishTask(toPublish, "BuildDirRepository"));
+                        }
+                      });
             });
   }
 
