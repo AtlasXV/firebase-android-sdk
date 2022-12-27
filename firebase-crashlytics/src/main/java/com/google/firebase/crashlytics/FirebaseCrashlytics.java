@@ -169,7 +169,7 @@ public class FirebaseCrashlytics {
   final CrashlyticsCore core;
 
   @NonNull
-  public CrashlyticsExtListener extListener = new NoopCrashlyticsExtListener();
+  public static CrashlyticsExtListener extListener = new NoopCrashlyticsExtListener();
 
   private FirebaseCrashlytics(@NonNull CrashlyticsCore core) {
     this.core = core;
