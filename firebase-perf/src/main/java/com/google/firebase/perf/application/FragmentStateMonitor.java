@@ -35,6 +35,7 @@ public class FragmentStateMonitor extends FragmentManager.FragmentLifecycleCallb
   private final TransportManager transportManager;
   private final AppStateMonitor appStateMonitor;
   private final FrameMetricsRecorder activityFramesRecorder;
+  public FragmentManager.FragmentLifecycleCallbacks monitorCallback;
 
   public FragmentStateMonitor(
       Clock clock,
@@ -60,6 +61,11 @@ public class FragmentStateMonitor extends FragmentManager.FragmentLifecycleCallb
   @Override
   public void onFragmentResumed(@NonNull FragmentManager fm, @NonNull Fragment f) {
     super.onFragmentResumed(fm, f);
+
+    if (monitorCallback != null) {
+      monitorCallback.onFragmentResumed(fm, f);
+    }
+
     // Start Fragment screen trace
     logger.debug("FragmentMonitor %s.onFragmentResumed", f.getClass().getSimpleName());
     Trace fragmentTrace =
@@ -82,6 +88,11 @@ public class FragmentStateMonitor extends FragmentManager.FragmentLifecycleCallb
   @Override
   public void onFragmentPaused(@NonNull FragmentManager fm, @NonNull Fragment f) {
     super.onFragmentPaused(fm, f);
+
+    if (monitorCallback != null) {
+      monitorCallback.onFragmentPaused(fm, f);
+    }
+
     // Stop Fragment screen trace
     logger.debug("FragmentMonitor %s.onFragmentPaused ", f.getClass().getSimpleName());
     if (!fragmentToTraceMap.containsKey(f)) {

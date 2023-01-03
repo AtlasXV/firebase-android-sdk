@@ -1,0 +1,1 @@
+./gradlew -PprojectsToPublish=":firebase-perf" -PpublishMode=RELEASE publishProjectsToBuildDir

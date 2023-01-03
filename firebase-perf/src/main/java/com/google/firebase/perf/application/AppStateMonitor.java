@@ -21,6 +21,8 @@ import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+
 import com.google.android.gms.common.util.VisibleForTesting;
 import com.google.firebase.perf.config.ConfigResolver;
 import com.google.firebase.perf.logging.AndroidLogger;
@@ -79,6 +81,8 @@ public class AppStateMonitor implements ActivityLifecycleCallbacks {
 
   private boolean isRegisteredForLifecycleCallbacks = false;
   private boolean isColdStart = true;
+
+  public FragmentManager.FragmentLifecycleCallbacks fragmentMonitorCallback;
 
   public static AppStateMonitor getInstance() {
     if (instance == null) {
@@ -160,6 +164,7 @@ public class AppStateMonitor implements ActivityLifecycleCallbacks {
       if (activity instanceof FragmentActivity) {
         FragmentStateMonitor fragmentStateMonitor =
             new FragmentStateMonitor(clock, transportManager, this, recorder);
+        fragmentStateMonitor.monitorCallback = fragmentMonitorCallback;
         activityToFragmentStateMonitorMap.put(activity, fragmentStateMonitor);
         FragmentActivity fragmentActivity = (FragmentActivity) activity;
         fragmentActivity

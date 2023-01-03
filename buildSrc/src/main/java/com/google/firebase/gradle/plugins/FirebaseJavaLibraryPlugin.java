@@ -18,6 +18,7 @@ import com.github.sherter.googlejavaformatgradleplugin.GoogleJavaFormatExtension
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.firebase.gradle.plugins.ci.Coverage;
+import com.google.firebase.gradle.plugins.publish.AtlasvPublishConfig;
 import java.io.File;
 import java.nio.file.Paths;
 import org.gradle.api.Plugin;
@@ -190,10 +191,7 @@ public class FirebaseJavaLibraryPlugin implements Plugin<Project> {
         repos ->
             repos.maven(
                 repo -> {
-                  String s = project.getRootProject().getBuildDir() + "/m2repository";
-                  File file = new File(s);
-                  repo.setUrl(file.toURI());
-                  repo.setName("BuildDir");
+                  AtlasvPublishConfig.configPublishRepo(project, repo);
                 }));
     publishing.publications(
         publications ->
