@@ -122,8 +122,10 @@ abstract class BaseFirebaseLibraryPlugin : Plugin<Project> {
       apply<MavenPublishPlugin>()
       extensions.configure<PublishingExtension> {
         repositories.maven {
-          url = rootProject.fileFromBuildDir("m2repository").toURI()
+          setUrl("https://maven.pkg.github.com/AtlasXV/android-libs")
           name = "BuildDir"
+          credentials.username = project.findProperty("GPR_USR").toString()
+          credentials.password = project.findProperty("GPR_KEY").toString()
         }
         publications.create<MavenPublication>("mavenAar") {
           afterEvaluate {

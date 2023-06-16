@@ -6,10 +6,11 @@
 ./gradlew publishMavenAarPublicationToMavenLocal
 `
 
-## Releasing to maven local
+## Releasing to mavenLocal/BuildDir
 
 `
 ./gradlew publishReleasingLibrariesToMavenLocal
+./gradlew publishReleasingLibrariesToBuildDir
 `
 
 Add release.json
