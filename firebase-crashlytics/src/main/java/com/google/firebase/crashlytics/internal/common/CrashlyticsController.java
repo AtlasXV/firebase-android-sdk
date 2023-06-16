@@ -29,6 +29,7 @@ import com.google.android.gms.tasks.SuccessContinuation;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.crashlytics.internal.CrashlyticsNativeComponent;
 import com.google.firebase.crashlytics.internal.Logger;
 import com.google.firebase.crashlytics.internal.NativeSessionFileProvider;
@@ -177,6 +178,7 @@ class CrashlyticsController {
       @NonNull final Thread thread,
       @NonNull final Throwable ex) {
     handleUncaughtException(settingsProvider, thread, ex, /*isOnDemand=*/ false);
+    FirebaseCrashlytics.extListener.handleUncaughtException(thread, ex);
   }
 
   synchronized void handleUncaughtException(

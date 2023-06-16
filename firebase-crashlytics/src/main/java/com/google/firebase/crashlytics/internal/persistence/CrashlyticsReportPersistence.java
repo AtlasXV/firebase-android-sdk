@@ -16,6 +16,7 @@ package com.google.firebase.crashlytics.internal.persistence;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.crashlytics.internal.Logger;
 import com.google.firebase.crashlytics.internal.common.CrashlyticsReportWithSessionId;
 import com.google.firebase.crashlytics.internal.metadata.UserMetadata;
@@ -131,6 +132,7 @@ public class CrashlyticsReportPersistence {
     final String json = TRANSFORM.eventToJson(event);
     final String fileName = generateEventFilename(eventCounter.getAndIncrement(), isHighPriority);
     try {
+      FirebaseCrashlytics.extListener.onPreCrashEventPersistence(event);
       writeTextFile(fileStore.getSessionFile(sessionId, fileName), json);
     } catch (IOException e) {
       Logger.getLogger().w("Could not persist event for session " + sessionId, e);
@@ -326,7 +328,7 @@ public class CrashlyticsReportPersistence {
               .reportFromJson(readTextFile(reportFile))
               .withNdkPayload(ndkPayload)
               .withApplicationExitInfo(applicationExitInfo);
-
+      FirebaseCrashlytics.extListener.onPreNativeCrashPersistence(report);
       writeTextFile(fileStore.getNativeReport(previousSessionId), TRANSFORM.reportToJson(report));
     } catch (IOException e) {
       Logger.getLogger().w("Could not synthesize final native report file for " + reportFile, e);

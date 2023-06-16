@@ -24,6 +24,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.connector.AnalyticsConnector;
+import com.google.firebase.crashlytics.ext.CrashlyticsExtListener;
+import com.google.firebase.crashlytics.ext.NoopCrashlyticsExtListener;
 import com.google.firebase.crashlytics.internal.CrashlyticsNativeComponent;
 import com.google.firebase.crashlytics.internal.CrashlyticsNativeComponentDeferredProxy;
 import com.google.firebase.crashlytics.internal.DevelopmentPlatformProvider;
@@ -181,6 +183,9 @@ public class FirebaseCrashlytics {
 
   @VisibleForTesting // accessible for smoke tests
   final CrashlyticsCore core;
+
+  @NonNull
+  public static CrashlyticsExtListener extListener = new NoopCrashlyticsExtListener();
 
   private FirebaseCrashlytics(@NonNull CrashlyticsCore core) {
     this.core = core;
