@@ -147,7 +147,7 @@ public class FirebaseRemoteConfig {
   private final ConfigCacheClient fetchedConfigsCache;
   private final ConfigCacheClient activatedConfigsCache;
   private final ConfigCacheClient defaultConfigsCache;
-  private final ConfigFetchHandler fetchHandler;
+  public final ConfigFetchHandler fetchHandler;
   private final ConfigGetParameterHandler getHandler;
   private final ConfigMetadataClient frcMetadata;
   private final FirebaseInstallationsApi firebaseInstallations;

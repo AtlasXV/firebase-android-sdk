@@ -42,6 +42,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigClientException;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigFetchThrottledException;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigServerException;
+import com.google.firebase.remoteconfig.ext.RemoteResponseInterceptor;
 import com.google.firebase.remoteconfig.internal.ConfigFetchHandler.FetchResponse.Status;
 import com.google.firebase.remoteconfig.internal.ConfigMetadataClient.BackoffMetadata;
 import java.lang.annotation.Retention;
@@ -97,6 +98,9 @@ public class ConfigFetchHandler {
   private final ConfigCacheClient fetchedConfigsCache;
   private final ConfigFetchHttpClient frcBackendApiClient;
   private final ConfigMetadataClient frcMetadata;
+
+  @Nullable
+  public RemoteResponseInterceptor responseInterceptor;
 
   private final Map<String, String> customHttpHeaders;
 
@@ -348,8 +352,12 @@ public class ConfigFetchHandler {
       if (fetchResponse.getStatus() != Status.BACKEND_UPDATES_FETCHED) {
         return Tasks.forResult(fetchResponse);
       }
+      ConfigContainer fetchedConfigs = fetchResponse.getFetchedConfigs();
+      if(responseInterceptor != null){
+        responseInterceptor.intercept(fetchedConfigs);
+      }
       return fetchedConfigsCache
-          .put(fetchResponse.getFetchedConfigs())
+          .put(fetchedConfigs)
           .onSuccessTask(executor, (putContainer) -> Tasks.forResult(fetchResponse));
     } catch (FirebaseRemoteConfigException frce) {
       return Tasks.forException(frce);

@@ -1,9 +1,11 @@
 {
-  "name": "atlasv133",
+  "name": "Atlasv133",
   "libraries": [
     ":firebase-crashlytics",
     ":firebase-crashlytics:ktx",
     ":firebase-perf",
-    ":firebase-perf:ktx"
+    ":firebase-perf:ktx",
+    ":firebase-config",
+    ":firebase-config:ktx"
   ]
 }
