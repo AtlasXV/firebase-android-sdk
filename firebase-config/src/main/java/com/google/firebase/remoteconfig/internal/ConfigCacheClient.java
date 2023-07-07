@@ -27,6 +27,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.remoteconfig.ext.ConfigCacheStrategy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -57,7 +58,7 @@ public class ConfigCacheClient {
 
   private final Executor executor;
   private final ConfigStorageClient storageClient;
-
+  @Nullable public ConfigCacheStrategy cacheStrategy;
   /**
    * Represents the {@link ConfigContainer} stored in disk. If the value is null, then there have
    * been no file reads or writes yet.
@@ -105,6 +106,21 @@ public class ConfigCacheClient {
     }
   }
 
+  public Task<ConfigContainer> refresh() {
+    if (cacheStrategy == null || !cacheStrategy.needRefresh()) {
+      return Tasks.forResult(null);
+    }
+    return get()
+        .continueWithTask(
+            executor,
+            (cachedFetchConfigsTask) -> {
+              if (cachedFetchConfigsTask.isSuccessful()) {
+                put(cachedFetchConfigsTask.getResult());
+              }
+              return cachedFetchConfigsTask;
+            });
+  }
+
   /**
    * Writes {@code configContainer} to disk and caches it to memory if the write is successful.
    *
@@ -125,6 +141,9 @@ public class ConfigCacheClient {
    */
   public Task<ConfigContainer> put(
       ConfigContainer configContainer, boolean shouldUpdateInMemoryContainer) {
+    if (cacheStrategy != null) {
+      cacheStrategy.onPreWriteToDiskCache(configContainer);
+    }
     return Tasks.call(executor, () -> storageClient.write(configContainer))
         .onSuccessTask(
             executor,

@@ -28,6 +28,7 @@ import com.google.firebase.abt.FirebaseABTesting;
 import com.google.firebase.concurrent.FirebaseExecutors;
 import com.google.firebase.installations.FirebaseInstallationsApi;
 import com.google.firebase.installations.InstallationTokenResult;
+import com.google.firebase.remoteconfig.ext.ConfigCacheStrategy;
 import com.google.firebase.remoteconfig.internal.ConfigCacheClient;
 import com.google.firebase.remoteconfig.internal.ConfigContainer;
 import com.google.firebase.remoteconfig.internal.ConfigFetchHandler;
@@ -147,7 +148,7 @@ public class FirebaseRemoteConfig {
   private final ConfigCacheClient fetchedConfigsCache;
   private final ConfigCacheClient activatedConfigsCache;
   private final ConfigCacheClient defaultConfigsCache;
-  public final ConfigFetchHandler fetchHandler;
+  private final ConfigFetchHandler fetchHandler;
   private final ConfigGetParameterHandler getHandler;
   private final ConfigMetadataClient frcMetadata;
   private final FirebaseInstallationsApi firebaseInstallations;
@@ -289,6 +290,14 @@ public class FirebaseRemoteConfig {
     // Convert Task type to Void.
     return fetchTask.onSuccessTask(
         FirebaseExecutors.directExecutor(), (unusedFetchResponse) -> Tasks.forResult(null));
+  }
+
+  public void setConfigCacheStrategy(ConfigCacheStrategy cacheStrategy) {
+    fetchHandler.setConfigCacheStrategy(cacheStrategy);
+  }
+
+  public void refreshDiskCache() {
+    fetchHandler.refreshDiskCache();
   }
 
   /**

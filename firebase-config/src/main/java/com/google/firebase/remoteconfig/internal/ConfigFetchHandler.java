@@ -42,8 +42,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigClientException;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigFetchThrottledException;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigServerException;
-import com.google.firebase.remoteconfig.ext.ConfigFetchStrategy;
-import com.google.firebase.remoteconfig.ext.ConfigFetchStrategyFactory;
+import com.google.firebase.remoteconfig.ext.ConfigCacheStrategy;
 import com.google.firebase.remoteconfig.internal.ConfigFetchHandler.FetchResponse.Status;
 import com.google.firebase.remoteconfig.internal.ConfigMetadataClient.BackoffMetadata;
 import java.lang.annotation.Retention;
@@ -99,9 +98,6 @@ public class ConfigFetchHandler {
   private final ConfigCacheClient fetchedConfigsCache;
   private final ConfigFetchHttpClient frcBackendApiClient;
   private final ConfigMetadataClient frcMetadata;
-
-  @Nullable
-  public ConfigFetchStrategyFactory configFetchStrategyFactory;
 
   private final Map<String, String> customHttpHeaders;
 
@@ -348,16 +344,12 @@ public class ConfigFetchHandler {
       Date fetchTime,
       Map<String, String> customFetchHeaders) {
     try {
-      ConfigFetchStrategy fetchStrategy = configFetchStrategyFactory == null ? null : configFetchStrategyFactory.create();
       FetchResponse fetchResponse =
-          fetchFromBackend(installationId, installationToken, fetchTime, customFetchHeaders, fetchStrategy);
+          fetchFromBackend(installationId, installationToken, fetchTime, customFetchHeaders);
       if (fetchResponse.getStatus() != Status.BACKEND_UPDATES_FETCHED) {
         return Tasks.forResult(fetchResponse);
       }
       ConfigContainer fetchedConfigs = fetchResponse.getFetchedConfigs();
-      if(fetchStrategy != null){
-        fetchStrategy.intercept(fetchedConfigs);
-      }
       return fetchedConfigsCache
           .put(fetchedConfigs)
           .onSuccessTask(executor, (putContainer) -> Tasks.forResult(fetchResponse));
@@ -380,19 +372,17 @@ public class ConfigFetchHandler {
       String installationId,
       String installationToken,
       Date currentTime,
-      Map<String, String> customFetchHeaders,
-      ConfigFetchStrategy fetchStrategy)
+      Map<String, String> customFetchHeaders)
       throws FirebaseRemoteConfigException {
     try {
       HttpURLConnection urlConnection = frcBackendApiClient.createHttpURLConnection();
-      String lastFetchETag = (fetchStrategy != null && fetchStrategy.needRefresh()) ? null : frcMetadata.getLastFetchETag();
       FetchResponse response =
           frcBackendApiClient.fetch(
               urlConnection,
               installationId,
               installationToken,
               getUserProperties(),
-              lastFetchETag,
+              frcMetadata.getLastFetchETag(),
               customFetchHeaders,
               getFirstOpenTime(),
               currentTime);
@@ -620,6 +610,14 @@ public class ConfigFetchHandler {
   @VisibleForTesting
   public Provider<AnalyticsConnector> getAnalyticsConnector() {
     return analyticsConnector;
+  }
+
+  public void setConfigCacheStrategy(ConfigCacheStrategy cacheStrategy) {
+    fetchedConfigsCache.cacheStrategy = cacheStrategy;
+  }
+
+  public void refreshDiskCache() {
+    fetchedConfigsCache.refresh();
   }
 
   /**
