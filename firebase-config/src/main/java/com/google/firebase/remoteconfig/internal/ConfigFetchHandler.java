@@ -96,6 +96,7 @@ public class ConfigFetchHandler {
   private final Clock clock;
   private final Random randomGenerator;
   private final ConfigCacheClient fetchedConfigsCache;
+  @Nullable private ConfigCacheStrategy cacheStrategy;
   private final ConfigFetchHttpClient frcBackendApiClient;
   private final ConfigMetadataClient frcMetadata;
 
@@ -350,6 +351,9 @@ public class ConfigFetchHandler {
         return Tasks.forResult(fetchResponse);
       }
       ConfigContainer fetchedConfigs = fetchResponse.getFetchedConfigs();
+      if (cacheStrategy != null) {
+        cacheStrategy.onBackendUpdatesFetched(fetchedConfigs);
+      }
       return fetchedConfigsCache
           .put(fetchedConfigs)
           .onSuccessTask(executor, (putContainer) -> Tasks.forResult(fetchResponse));
@@ -613,6 +617,7 @@ public class ConfigFetchHandler {
   }
 
   public void setConfigCacheStrategy(ConfigCacheStrategy cacheStrategy) {
+    this.cacheStrategy = cacheStrategy;
     fetchedConfigsCache.cacheStrategy = cacheStrategy;
   }
 

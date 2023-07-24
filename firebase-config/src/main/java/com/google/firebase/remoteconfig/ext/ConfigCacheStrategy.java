@@ -8,4 +8,6 @@ public interface ConfigCacheStrategy {
   public boolean needRefresh();
 
   public void onPreWriteToDiskCache(@Nullable ConfigContainer fetchedConfigs);
+
+  public void onBackendUpdatesFetched(ConfigContainer fetchedConfigs);
 }
