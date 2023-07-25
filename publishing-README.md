@@ -1,5 +1,15 @@
 # Publishing
 
+## Java代码格式化
+环境变量Java需要是11
+```
+java -version
+java version "11.0.11"
+```
+```
+./gradlew :<firebase-project>:googleJavaFormat
+```
+
 ## All to maven local
 
 `
