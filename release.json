@@ -1,7 +1,7 @@
 {
   "name": "Atlasv133",
   "libraries": [
-    ":firebase-config",
-    ":firebase-config:ktx"
+    ":firebase-perf",
+    ":firebase-perf:ktx"
   ]
 }

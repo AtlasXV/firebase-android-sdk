@@ -38,6 +38,7 @@ import com.google.firebase.perf.application.AppStateMonitor.AppStateCallback;
 import com.google.firebase.perf.config.ConfigResolver;
 import com.google.firebase.perf.logging.AndroidLogger;
 import com.google.firebase.perf.logging.ConsoleUrlGenerator;
+import com.google.firebase.perf.metrics.PerfMetricDispatcher;
 import com.google.firebase.perf.metrics.validator.PerfMetricValidator;
 import com.google.firebase.perf.session.SessionManager;
 import com.google.firebase.perf.util.Constants;
@@ -123,6 +124,8 @@ public class TransportManager implements AppStateCallback {
   private ApplicationInfo.Builder applicationInfoBuilder;
   private String packageName;
   private String projectId;
+  @Nullable
+  public PerfMetricDispatcher perfMetricDispatcher = null;
 
   private boolean isForegroundState = false;
 
@@ -473,6 +476,10 @@ public class TransportManager implements AppStateCallback {
     }
 
     flgTransport.log(perfMetric);
+
+    if(perfMetricDispatcher != null){
+      perfMetricDispatcher.dispatch(perfMetric);
+    }
   }
 
   // endregion
