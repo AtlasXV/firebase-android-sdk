@@ -30,6 +30,8 @@ import com.google.firebase.annotations.concurrent.Lightweight;
 import com.google.firebase.annotations.concurrent.UiThread;
 import com.google.firebase.emulators.EmulatedServiceSettings;
 import com.google.firebase.functions.FirebaseFunctionsException.Code;
+import com.google.firebase.functions.ktx.InterceptorFactory;
+
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
 import java.io.IOException;
@@ -42,6 +44,7 @@ import java.util.concurrent.Executor;
 import javax.inject.Named;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -345,8 +348,9 @@ public class FirebaseFunctions {
     body.put("data", encoded);
 
     JSONObject bodyJSON = new JSONObject(body);
+    String bodyJSONString = bodyJSON.toString();
     MediaType contentType = MediaType.parse("application/json");
-    RequestBody requestBody = RequestBody.create(contentType, bodyJSON.toString());
+    RequestBody requestBody = RequestBody.create(contentType, bodyJSONString);
 
     Request.Builder request = new Request.Builder().url(url).post(requestBody);
     if (context.getAuthToken() != null) {
@@ -359,7 +363,9 @@ public class FirebaseFunctions {
       request = request.header("X-Firebase-AppCheck", context.getAppCheckToken());
     }
 
-    OkHttpClient callClient = options.apply(client);
+    InterceptorFactory interceptorFactory = options.getInterceptorFactory();
+    Interceptor interceptor = interceptorFactory == null ? null : interceptorFactory.create(body, bodyJSONString);
+    OkHttpClient callClient = options.apply(client, interceptor);
     Call call = callClient.newCall(request.build());
 
     TaskCompletionSource<HttpsCallableResult> tcs = new TaskCompletionSource<>();

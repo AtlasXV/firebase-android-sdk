@@ -14,7 +14,14 @@
 
 package com.google.firebase.functions;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.firebase.functions.ktx.InterceptorFactory;
+
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 /** An internal class for keeping track of options applied to an HttpsCallableReference. */
@@ -29,14 +36,17 @@ class HttpsCallOptions {
   private TimeUnit timeoutUnits = DEFAULT_TIMEOUT_UNITS;
 
   private final boolean limitedUseAppCheckTokens;
+  private final InterceptorFactory interceptorFactory;
 
   /** Creates an (internal) HttpsCallOptions from the (external) {@link HttpsCallableOptions}. */
   HttpsCallOptions(HttpsCallableOptions publicCallableOptions) {
     this.limitedUseAppCheckTokens = publicCallableOptions.getLimitedUseAppCheckTokens();
+    this.interceptorFactory = publicCallableOptions.getInterceptorFactory();
   }
 
   HttpsCallOptions() {
     this.limitedUseAppCheckTokens = false;
+    this.interceptorFactory = null;
   }
 
   /**
@@ -63,12 +73,19 @@ class HttpsCallOptions {
     return limitedUseAppCheckTokens;
   }
 
+  public InterceptorFactory getInterceptorFactory() {
+    return interceptorFactory;
+  }
+
   /** Creates a new OkHttpClient with these options applied to it. */
-  OkHttpClient apply(OkHttpClient client) {
-    return client
+  OkHttpClient apply(OkHttpClient client, @Nullable Interceptor interceptor) {
+    OkHttpClient.Builder builder = client
         .newBuilder()
         .callTimeout(timeout, timeoutUnits)
-        .readTimeout(timeout, timeoutUnits)
-        .build();
+        .readTimeout(timeout, timeoutUnits);
+    if (interceptor!= null){
+      builder.addInterceptor(interceptor);
+    }
+    return builder.build();
   }
 }

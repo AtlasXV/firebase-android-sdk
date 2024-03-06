@@ -15,6 +15,9 @@
 package com.google.firebase.functions;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.firebase.functions.ktx.InterceptorFactory;
 
 /**
  * Options for configuring the callable function.
@@ -24,9 +27,11 @@ import androidx.annotation.NonNull;
 public class HttpsCallableOptions {
   // If true, request a limited-use token from AppCheck.
   private final boolean limitedUseAppCheckTokens;
+  private final InterceptorFactory interceptorFactory;
 
-  private HttpsCallableOptions(boolean limitedUseAppCheckTokens) {
+  private HttpsCallableOptions(boolean limitedUseAppCheckTokens, InterceptorFactory interceptorFactory) {
     this.limitedUseAppCheckTokens = limitedUseAppCheckTokens;
+    this.interceptorFactory = interceptorFactory;
   }
 
   /**
@@ -36,9 +41,23 @@ public class HttpsCallableOptions {
     return limitedUseAppCheckTokens;
   }
 
+  @Nullable
+  public InterceptorFactory getInterceptorFactory() {
+    return interceptorFactory;
+  }
+
   /** Builder class for {@link com.google.firebase.functions.HttpsCallableOptions} */
   public static class Builder {
     private boolean limitedUseAppCheckTokens = false;
+
+    @Nullable
+    private InterceptorFactory interceptorFactory = null;
+
+    @NonNull
+    public Builder setInterceptorFactory(InterceptorFactory interceptorFactory) {
+      this.interceptorFactory = interceptorFactory;
+      return this;
+    }
 
     /**
      * Sets whether or not to use limited-use App Check tokens when invoking the associated
@@ -58,7 +77,7 @@ public class HttpsCallableOptions {
     /** Builds a new {@link com.google.firebase.functions.HttpsCallableOptions}. */
     @NonNull
     public HttpsCallableOptions build() {
-      return new HttpsCallableOptions(limitedUseAppCheckTokens);
+      return new HttpsCallableOptions(limitedUseAppCheckTokens, interceptorFactory);
     }
   }
 }
