@@ -196,7 +196,7 @@ data class ModuleVersion(
      */
     fun fromStringOrNull(str: String): ModuleVersion? =
       runCatching {
-          VERSION_REGEX.matchEntire(str)?.let {
+          VERSION_REGEX.matchEntire(str.substringBefore("-Atlasv"))?.let {
             val (major, minor, patch, pre, build) = it.destructured
             ModuleVersion(
                 major.toInt(),

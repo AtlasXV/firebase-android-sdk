@@ -46,6 +46,9 @@ fun fixLibraryGroupVersions(libraryGroups: Map<String, List<FirebaseLibraryExten
       if (ModuleVersion.fromStringOrNull(firebaseExtension.project.version.toString()) == null) {
         firebaseExtension.project.version = maxVersion.toString()
       }
+      if (!firebaseExtension.version.contains("Atlasv", ignoreCase = true)) {
+        firebaseExtension.project.version = "${firebaseExtension.version}-Atlasv1"
+      }
     }
   }
 }
