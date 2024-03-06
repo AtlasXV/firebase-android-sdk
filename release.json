@@ -1,11 +1,12 @@
 {
     "name": "m144",
     "libraries": [
+        ":firebase-crashlytics",
+        ":firebase-crashlytics:ktx",
+        ":firebase-crashlytics-ndk",
+        ":firebase-perf",
+        ":firebase-perf:ktx",
         ":firebase-config",
-        ":firebase-config:ktx",
-        ":firebase-database",
-        ":firebase-database:ktx",
-        ":firebase-firestore",
-        ":firebase-firestore:ktx"
+        ":firebase-config:ktx"
     ]
 }
