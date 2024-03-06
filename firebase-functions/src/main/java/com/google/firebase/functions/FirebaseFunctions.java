@@ -31,7 +31,6 @@ import com.google.firebase.annotations.concurrent.UiThread;
 import com.google.firebase.emulators.EmulatedServiceSettings;
 import com.google.firebase.functions.FirebaseFunctionsException.Code;
 import com.google.firebase.functions.ktx.InterceptorFactory;
-
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
 import java.io.IOException;
@@ -364,7 +363,8 @@ public class FirebaseFunctions {
     }
 
     InterceptorFactory interceptorFactory = options.getInterceptorFactory();
-    Interceptor interceptor = interceptorFactory == null ? null : interceptorFactory.create(body, bodyJSONString);
+    Interceptor interceptor =
+        interceptorFactory == null ? null : interceptorFactory.create(body, bodyJSONString);
     OkHttpClient callClient = options.apply(client, interceptor);
     Call call = callClient.newCall(request.build());
 

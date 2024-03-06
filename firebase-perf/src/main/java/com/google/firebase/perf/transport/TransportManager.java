@@ -124,8 +124,7 @@ public class TransportManager implements AppStateCallback {
   private ApplicationInfo.Builder applicationInfoBuilder;
   private String packageName;
   private String projectId;
-  @Nullable
-  public PerfMetricDispatcher perfMetricDispatcher = null;
+  @Nullable public PerfMetricDispatcher perfMetricDispatcher = null;
 
   private boolean isForegroundState = false;
 
@@ -476,7 +475,7 @@ public class TransportManager implements AppStateCallback {
 
     flgTransport.log(perfMetric);
 
-    if(perfMetricDispatcher != null){
+    if (perfMetricDispatcher != null) {
       perfMetricDispatcher.dispatch(perfMetric);
     }
   }

@@ -16,7 +16,6 @@ package com.google.firebase.functions;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.google.firebase.functions.ktx.InterceptorFactory;
 
 /**
@@ -29,7 +28,8 @@ public class HttpsCallableOptions {
   private final boolean limitedUseAppCheckTokens;
   private final InterceptorFactory interceptorFactory;
 
-  private HttpsCallableOptions(boolean limitedUseAppCheckTokens, InterceptorFactory interceptorFactory) {
+  private HttpsCallableOptions(
+      boolean limitedUseAppCheckTokens, InterceptorFactory interceptorFactory) {
     this.limitedUseAppCheckTokens = limitedUseAppCheckTokens;
     this.interceptorFactory = interceptorFactory;
   }
@@ -50,8 +50,7 @@ public class HttpsCallableOptions {
   public static class Builder {
     private boolean limitedUseAppCheckTokens = false;
 
-    @Nullable
-    private InterceptorFactory interceptorFactory = null;
+    @Nullable private InterceptorFactory interceptorFactory = null;
 
     @NonNull
     public Builder setInterceptorFactory(InterceptorFactory interceptorFactory) {

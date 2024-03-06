@@ -198,8 +198,7 @@ public class FirebaseCrashlytics {
   @VisibleForTesting // accessible for smoke tests
   final CrashlyticsCore core;
 
-  @NonNull
-  public static CrashlyticsExtListener extListener = new NoopCrashlyticsExtListener();
+  @NonNull public static CrashlyticsExtListener extListener = new NoopCrashlyticsExtListener();
 
   private FirebaseCrashlytics(@NonNull CrashlyticsCore core) {
     this.core = core;
