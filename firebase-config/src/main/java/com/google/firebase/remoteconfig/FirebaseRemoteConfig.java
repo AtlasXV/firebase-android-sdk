@@ -37,6 +37,7 @@ import com.google.firebase.remoteconfig.internal.ConfigGetParameterHandler;
 import com.google.firebase.remoteconfig.internal.ConfigMetadataClient;
 import com.google.firebase.remoteconfig.internal.ConfigRealtimeHandler;
 import com.google.firebase.remoteconfig.internal.DefaultsXmlParser;
+import com.google.firebase.remoteconfig.internal.rollouts.RolloutsStateSubscriptionsHandler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -153,6 +154,7 @@ public class FirebaseRemoteConfig {
   private final ConfigMetadataClient frcMetadata;
   private final FirebaseInstallationsApi firebaseInstallations;
   private final ConfigRealtimeHandler configRealtimeHandler;
+  private final RolloutsStateSubscriptionsHandler rolloutsStateSubscriptionsHandler;
 
   /**
    * Firebase Remote Config constructor.
@@ -171,7 +173,8 @@ public class FirebaseRemoteConfig {
       ConfigFetchHandler fetchHandler,
       ConfigGetParameterHandler getHandler,
       ConfigMetadataClient frcMetadata,
-      ConfigRealtimeHandler configRealtimeHandler) {
+      ConfigRealtimeHandler configRealtimeHandler,
+      RolloutsStateSubscriptionsHandler rolloutsStateSubscriptionsHandler) {
     this.context = context;
     this.firebaseApp = firebaseApp;
     this.firebaseInstallations = firebaseInstallations;
@@ -184,6 +187,7 @@ public class FirebaseRemoteConfig {
     this.getHandler = getHandler;
     this.frcMetadata = frcMetadata;
     this.configRealtimeHandler = configRealtimeHandler;
+    this.rolloutsStateSubscriptionsHandler = rolloutsStateSubscriptionsHandler;
   }
 
   /**
@@ -613,8 +617,10 @@ public class FirebaseRemoteConfig {
       // An activate call should only be made if there are fetched values to activate, which are
       // then put into the activated cache. So, if the put is called and succeeds, then the returned
       // values from the put task must be non-null.
-      if (putTask.getResult() != null) {
-        updateAbtWithActivatedExperiments(putTask.getResult().getAbtExperiments());
+      ConfigContainer activatedConfigs = putTask.getResult();
+      if (activatedConfigs != null) {
+        updateAbtWithActivatedExperiments(activatedConfigs.getAbtExperiments());
+        rolloutsStateSubscriptionsHandler.publishActiveRolloutsState(activatedConfigs);
       } else {
         // Should never happen.
         Log.e(TAG, "Activated configs written to disk are null.");
@@ -711,6 +717,10 @@ public class FirebaseRemoteConfig {
       experimentInfoMaps.add(experimentInfo);
     }
     return experimentInfoMaps;
+  }
+
+  RolloutsStateSubscriptionsHandler getRolloutsStateSubscriptionsHandler() {
+    return rolloutsStateSubscriptionsHandler;
   }
 
   /** Returns true if the fetched configs are fresher than the activated configs. */

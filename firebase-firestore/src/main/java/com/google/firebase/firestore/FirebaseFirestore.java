@@ -104,6 +104,8 @@ public class FirebaseFirestore {
   private volatile FirestoreClient client;
   private final GrpcMetadataProvider metadataProvider;
 
+  @Nullable private PersistentCacheIndexManager persistentCacheIndexManager;
+
   @NonNull
   private static FirebaseApp getDefaultFirebaseApp() {
     FirebaseApp app = FirebaseApp.getInstance();
@@ -114,9 +116,10 @@ public class FirebaseFirestore {
   }
 
   /**
-   * Returns the default {@link FirebaseFirestore} instance associated with the default {@link
-   * FirebaseApp}. Returns the same instance for all invocations. If no instance exists, initializes
-   * a new instance with default settings.
+   * Returns the default {@link FirebaseFirestore} instance for the default {@link FirebaseApp}.
+   *
+   * <p>Returns the same instance for all invocations. If no instance exists, initializes a new
+   * instance.
    *
    * @returns The {@link FirebaseFirestore} instance.
    */
@@ -126,11 +129,12 @@ public class FirebaseFirestore {
   }
 
   /**
-   * Returns the default {@link FirebaseFirestore} instance that is associated with the provided
-   * {@link FirebaseApp}. For a given {@link FirebaseApp}, invocation always returns the same
-   * instance. If no instance exists, initializes a new instance with default settings.
+   * Returns the default {@link FirebaseFirestore} instance for the provided {@link FirebaseApp}.
    *
-   * @param app - The {@link FirebaseApp} instance that the returned {@link FirebaseFirestore}
+   * <p>For a given {@link FirebaseApp}, invocation always returns the same instance. If no instance
+   * exists, initializes a new instance.
+   *
+   * @param app The {@link FirebaseApp} instance that the returned {@link FirebaseFirestore}
    *     instance is associated with.
    * @returns The {@link FirebaseFirestore} instance.
    */
@@ -140,11 +144,12 @@ public class FirebaseFirestore {
   }
 
   /**
-   * Returns the {@link FirebaseFirestore} instance that is associated with the default {@link
-   * FirebaseApp}. Returns the same instance for all invocations given the same database parameter.
-   * If no instance exists, initializes a new instance with default settings.
+   * Returns the {@link FirebaseFirestore} instance for the default {@link FirebaseApp}.
    *
-   * @param database - The name of database.
+   * <p>Returns the same instance for all invocations given the same database parameter. If no
+   * instance exists, initializes a new instance.
+   *
+   * @param database The database ID.
    * @returns The {@link FirebaseFirestore} instance.
    */
   @NonNull
@@ -153,14 +158,14 @@ public class FirebaseFirestore {
   }
 
   /**
-   * Returns the {@link FirebaseFirestore} instance that is associated with the provided {@link
-   * FirebaseApp}. Returns the same instance for all invocations given the same {@link FirebaseApp}
-   * and database parameter. If no instance exists, initializes a new instance with default
-   * settings.
+   * Returns the {@link FirebaseFirestore} instance for the provided {@link FirebaseApp}.
    *
-   * @param app - The {@link FirebaseApp} instance that the returned {@link FirebaseFirestore}
+   * <p>Returns the same instance for all invocations given the same {@link FirebaseApp} and
+   * database parameter. If no instance exists, initializes a new instance.
+   *
+   * @param app The {@link FirebaseApp} instance that the returned {@link FirebaseFirestore}
    *     instance is associated with.
-   * @param database - The name of database.
+   * @param database The database ID.
    * @returns The {@link FirebaseFirestore} instance.
    */
   @NonNull
@@ -350,7 +355,11 @@ public class FirebaseFirestore {
    * @param json The JSON format exported by the Firebase CLI.
    * @return A task that resolves once all indices are successfully configured.
    * @throws IllegalArgumentException if the JSON format is invalid
+   * @deprecated Instead of creating cache indexes manually, consider using {@link
+   *     PersistentCacheIndexManager#enableIndexAutoCreation()} to let the SDK decide whether to
+   *     create cache indexes for queries running locally.
    */
+  @Deprecated
   @PreviewApi
   @NonNull
   public Task<Void> setIndexConfiguration(@NonNull String json) {
@@ -398,6 +407,27 @@ public class FirebaseFirestore {
     }
 
     return client.configureFieldIndexes(parsedIndexes);
+  }
+
+  /**
+   * Gets the {@code PersistentCacheIndexManager} instance used by this {@code FirebaseFirestore}
+   * object.
+   *
+   * <p>This is not the same as Cloud Firestore Indexes. Persistent cache indexes are optional
+   * indexes that only exist within the SDK to assist in local query execution.
+   *
+   * @return The {@code PersistentCacheIndexManager} instance or null if local persistent storage is
+   *     not in use.
+   */
+  @Nullable
+  public synchronized PersistentCacheIndexManager getPersistentCacheIndexManager() {
+    ensureClientConfigured();
+    if (persistentCacheIndexManager == null
+        && (settings.isPersistenceEnabled()
+            || settings.getCacheSettings() instanceof PersistentCacheSettings)) {
+      persistentCacheIndexManager = new PersistentCacheIndexManager(client);
+    }
+    return persistentCacheIndexManager;
   }
 
   /**
@@ -856,7 +886,7 @@ public class FirebaseFirestore {
 
   /**
    * Sets the language of the public API in the format of "gl-<language>/<version>" where version
-   * might be blank, e.g. `gl-cpp/`. The provided string is used as is.
+   * might be blank, for example `gl-cpp/`. The provided string is used as is.
    *
    * <p>Note: this method is package-private because it is expected to only be called via JNI (which
    * ignores access modifiers).

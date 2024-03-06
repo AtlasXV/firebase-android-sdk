@@ -93,6 +93,7 @@ class CrashlyticsController {
   private final LogFileManager logFileManager;
   private final CrashlyticsNativeComponent nativeComponent;
   private final AnalyticsEventLogger analyticsEventLogger;
+  private final CrashlyticsAppQualitySessionsSubscriber sessionsSubscriber;
   private final SessionReportingCoordinator reportingCoordinator;
 
   private CrashlyticsUncaughtExceptionHandler crashHandler;
@@ -126,7 +127,8 @@ class CrashlyticsController {
       LogFileManager logFileManager,
       SessionReportingCoordinator sessionReportingCoordinator,
       CrashlyticsNativeComponent nativeComponent,
-      AnalyticsEventLogger analyticsEventLogger) {
+      AnalyticsEventLogger analyticsEventLogger,
+      CrashlyticsAppQualitySessionsSubscriber sessionsSubscriber) {
     this.context = context;
     this.backgroundWorker = backgroundWorker;
     this.idManager = idManager;
@@ -138,7 +140,7 @@ class CrashlyticsController {
     this.logFileManager = logFileManager;
     this.nativeComponent = nativeComponent;
     this.analyticsEventLogger = analyticsEventLogger;
-
+    this.sessionsSubscriber = sessionsSubscriber;
     this.reportingCoordinator = sessionReportingCoordinator;
   }
 
@@ -216,7 +218,7 @@ class CrashlyticsController {
 
                 doWriteAppExceptionMarker(timestampMillis);
                 doCloseSessions(settingsProvider);
-                doOpenSession(new CLSUUID(idManager).toString());
+                doOpenSession(new CLSUUID(idManager).toString(), isOnDemand);
 
                 // If automatic data collection is disabled, we'll need to wait until the next run
                 // of the app.
@@ -498,7 +500,7 @@ class CrashlyticsController {
         new Callable<Void>() {
           @Override
           public Void call() throws Exception {
-            doOpenSession(sessionIdentifier);
+            doOpenSession(sessionIdentifier, /*isOnDemand=*/ false);
             return null;
           }
         });
@@ -550,7 +552,7 @@ class CrashlyticsController {
    * Not synchronized/locked. Must be executed from the single thread executor service used by this
    * class.
    */
-  private void doOpenSession(String sessionIdentifier) {
+  private void doOpenSession(String sessionIdentifier, Boolean isOnDemand) {
     final long startedAtSeconds = getCurrentTimestampSeconds();
 
     Logger.getLogger().d("Opening a new session with ID " + sessionIdentifier);
@@ -560,7 +562,7 @@ class CrashlyticsController {
 
     StaticSessionData.AppData appData = createAppData(idManager, this.appData);
     StaticSessionData.OsData osData = createOsData();
-    StaticSessionData.DeviceData deviceData = createDeviceData();
+    StaticSessionData.DeviceData deviceData = createDeviceData(context);
 
     nativeComponent.prepareNativeSession(
         sessionIdentifier,
@@ -568,7 +570,16 @@ class CrashlyticsController {
         startedAtSeconds,
         StaticSessionData.create(appData, osData, deviceData));
 
+    // If is on-demand fatal, we need to update the session id for userMetadata
+    // as well(since we don't really change the object to a new one for a new session).
+    // all the information in the previous session is still in memory, but we do need to
+    // manually writing them into persistence for the new session.
+    if (isOnDemand && sessionIdentifier != null) {
+      userMetadata.setNewSession(sessionIdentifier);
+    }
+
     logFileManager.setCurrentSession(sessionIdentifier);
+    sessionsSubscriber.setSessionId(sessionIdentifier);
     reportingCoordinator.onBeginSession(sessionIdentifier, startedAtSeconds);
   }
 
@@ -609,6 +620,14 @@ class CrashlyticsController {
     String currentSessionId = null;
     if (skipCurrentSession) {
       currentSessionId = sortedOpenSessions.get(0);
+    } else {
+      // The Sessions SDK can rotate the AQS session id independently of the Crashlytics session.
+      // There is a window of time between Crashlytics closing the current session and opening a
+      // new session when the Sessions SDK is able to rotate the AQS session id. For such cases it
+      // is necessary to clear the current Crashlytics session id from the Sessions subscriber in
+      // order to prevent the newly rotated AQS session id from being associated with the closed
+      // Crashlytics session. On-demand fatals is an example of where this can happen.
+      sessionsSubscriber.setSessionId(/* sessionId= */ null);
     }
 
     reportingCoordinator.finalizeSessions(getCurrentTimestampSeconds(), currentSessionId);
@@ -751,7 +770,7 @@ class CrashlyticsController {
         idManager.getAppIdentifier(),
         appData.versionCode,
         appData.versionName,
-        idManager.getCrashlyticsInstallId(),
+        idManager.getInstallIds().getCrashlyticsInstallId(),
         DeliveryMechanism.determineFrom(appData.installerPackageName).getId(),
         appData.developmentPlatformProvider);
   }
@@ -761,7 +780,7 @@ class CrashlyticsController {
         VERSION.RELEASE, VERSION.CODENAME, CommonUtils.isRooted());
   }
 
-  private static StaticSessionData.DeviceData createDeviceData() {
+  private static StaticSessionData.DeviceData createDeviceData(Context context) {
     final StatFs statFs = new StatFs(Environment.getDataDirectory().getPath());
     final long diskSpace = (long) statFs.getBlockCount() * (long) statFs.getBlockSize();
 
@@ -769,7 +788,7 @@ class CrashlyticsController {
         CommonUtils.getCpuArchitectureInt(),
         Build.MODEL,
         Runtime.getRuntime().availableProcessors(),
-        CommonUtils.getTotalRamInBytes(),
+        CommonUtils.calculateTotalRamInBytes(context),
         diskSpace,
         CommonUtils.isEmulator(),
         CommonUtils.getDeviceState(),
@@ -865,6 +884,8 @@ class CrashlyticsController {
         fileStore.getSessionFile(previousSessionId, UserMetadata.USERDATA_FILENAME);
     final File keysFile =
         fileStore.getSessionFile(previousSessionId, UserMetadata.KEYDATA_FILENAME);
+    final File rolloutsFile =
+        fileStore.getSessionFile(previousSessionId, UserMetadata.ROLLOUTS_STATE_FILENAME);
 
     List<NativeSessionFile> nativeSessionFiles = new ArrayList<>();
     nativeSessionFiles.add(new BytesBackedNativeSessionFile("logs_file", "logs", logBytes));
@@ -884,6 +905,8 @@ class CrashlyticsController {
     nativeSessionFiles.add(nativeCoreFile(fileProvider));
     nativeSessionFiles.add(new FileBackedNativeSessionFile("user_meta_file", "user", userFile));
     nativeSessionFiles.add(new FileBackedNativeSessionFile("keys_file", "keys", keysFile));
+    nativeSessionFiles.add(
+        new FileBackedNativeSessionFile("rollouts_file", "rollouts", rolloutsFile));
     return nativeSessionFiles;
   }
 

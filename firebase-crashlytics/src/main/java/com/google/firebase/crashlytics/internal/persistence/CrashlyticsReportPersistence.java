@@ -18,12 +18,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.crashlytics.internal.Logger;
+import com.google.firebase.crashlytics.internal.common.CrashlyticsAppQualitySessionsSubscriber;
 import com.google.firebase.crashlytics.internal.common.CrashlyticsReportWithSessionId;
 import com.google.firebase.crashlytics.internal.metadata.UserMetadata;
 import com.google.firebase.crashlytics.internal.model.CrashlyticsReport;
 import com.google.firebase.crashlytics.internal.model.CrashlyticsReport.Session;
 import com.google.firebase.crashlytics.internal.model.CrashlyticsReport.Session.Event;
-import com.google.firebase.crashlytics.internal.model.ImmutableList;
 import com.google.firebase.crashlytics.internal.model.serialization.CrashlyticsReportJsonTransform;
 import com.google.firebase.crashlytics.internal.settings.SettingsProvider;
 import java.io.ByteArrayOutputStream;
@@ -79,12 +79,16 @@ public class CrashlyticsReportPersistence {
   private final AtomicInteger eventCounter = new AtomicInteger(0);
 
   private final FileStore fileStore;
+  private final SettingsProvider settingsProvider;
+  private final CrashlyticsAppQualitySessionsSubscriber sessionsSubscriber;
 
-  @NonNull private final SettingsProvider settingsProvider;
-
-  public CrashlyticsReportPersistence(FileStore fileStore, SettingsProvider settingsProvider) {
+  public CrashlyticsReportPersistence(
+      FileStore fileStore,
+      SettingsProvider settingsProvider,
+      CrashlyticsAppQualitySessionsSubscriber sessionsSubscriber) {
     this.fileStore = fileStore;
     this.settingsProvider = settingsProvider;
+    this.sessionsSubscriber = sessionsSubscriber;
   }
 
   public void persistReport(@NonNull CrashlyticsReport report) {
@@ -123,6 +127,8 @@ public class CrashlyticsReportPersistence {
    *
    * <p>Only a certain number of normal priority events are stored per-session. When this maximum is
    * reached, the oldest events will be dropped. High priority events are not subject to this limit.
+   *
+   * <p>Also persists the current app quality sessions session id.
    */
   public void persistEvent(
       @NonNull CrashlyticsReport.Session.Event event,
@@ -134,8 +140,8 @@ public class CrashlyticsReportPersistence {
     try {
       FirebaseCrashlytics.extListener.onPreCrashEventPersistence(event);
       writeTextFile(fileStore.getSessionFile(sessionId, fileName), json);
-    } catch (IOException e) {
-      Logger.getLogger().w("Could not persist event for session " + sessionId, e);
+    } catch (IOException ex) {
+      Logger.getLogger().w("Could not persist event for session " + sessionId, ex);
     }
     trimEvents(sessionId, maxEventsToKeep);
   }
@@ -312,9 +318,11 @@ public class CrashlyticsReportPersistence {
     }
 
     String userId = UserMetadata.readUserId(sessionId, fileStore);
+    String appQualitySessionId = sessionsSubscriber.getAppQualitySessionId(sessionId);
 
-    final File reportFile = fileStore.getSessionFile(sessionId, REPORT_FILE_NAME);
-    synthesizeReportFile(reportFile, events, sessionEndTime, isHighPriorityReport, userId);
+    File reportFile = fileStore.getSessionFile(sessionId, REPORT_FILE_NAME);
+    synthesizeReportFile(
+        reportFile, events, sessionEndTime, isHighPriorityReport, userId, appQualitySessionId);
   }
 
   private void synthesizeNativeReportFile(
@@ -322,13 +330,15 @@ public class CrashlyticsReportPersistence {
       @NonNull CrashlyticsReport.FilesPayload ndkPayload,
       @NonNull String previousSessionId,
       CrashlyticsReport.ApplicationExitInfo applicationExitInfo) {
+    String appQualitySessionId = sessionsSubscriber.getAppQualitySessionId(previousSessionId);
     try {
       final CrashlyticsReport report =
           TRANSFORM
               .reportFromJson(readTextFile(reportFile))
               .withNdkPayload(ndkPayload)
-              .withApplicationExitInfo(applicationExitInfo);
-      FirebaseCrashlytics.extListener.onPreNativeCrashPersistence(report);
+              .withApplicationExitInfo(applicationExitInfo)
+              .withAppQualitySessionId(appQualitySessionId);
+
       writeTextFile(fileStore.getNativeReport(previousSessionId), TRANSFORM.reportToJson(report));
     } catch (IOException e) {
       Logger.getLogger().w("Could not synthesize final native report file for " + reportFile, e);
@@ -340,19 +350,23 @@ public class CrashlyticsReportPersistence {
       @NonNull List<Event> events,
       long sessionEndTime,
       boolean isHighPriorityReport,
-      @Nullable String userId) {
+      @Nullable String userId,
+      @Nullable String appQualitySessionId) {
     try {
       CrashlyticsReport report =
           TRANSFORM
               .reportFromJson(readTextFile(reportFile))
               .withSessionEndFields(sessionEndTime, isHighPriorityReport, userId)
-              .withEvents(ImmutableList.from(events));
+              .withAppQualitySessionId(appQualitySessionId)
+              .withEvents(events);
       final Session session = report.getSession();
 
       if (session == null) {
         // This shouldn't happen, but is a valid state for NDK-based reports
         return;
       }
+
+      Logger.getLogger().d("appQualitySessionId: " + appQualitySessionId);
 
       File finalizedReportFile =
           isHighPriorityReport

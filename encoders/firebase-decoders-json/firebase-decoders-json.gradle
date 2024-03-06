@@ -19,9 +19,11 @@ plugins {
 firebaseLibrary {
     publishSources = true
     publishJavadoc = false
+    publishReleaseNotes = false
 }
 
 android {
+    namespace "com.google.firebase.decoders.json"
     compileSdkVersion project.targetSdkVersion
     defaultConfig {
         minSdkVersion project.minSdkVersion
@@ -45,7 +47,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
 
     testImplementation 'androidx.test:runner:1.2.0'
-    testImplementation 'androidx.test.ext:junit:1.1.1'
+    testImplementation "androidx.test.ext:junit:$androidxTestJUnitVersion"
     testImplementation "org.robolectric:robolectric:$robolectricVersion"
     testImplementation 'junit:junit:4.13-rc-1'
     testImplementation "com.google.truth:truth:$googleTruthVersion"

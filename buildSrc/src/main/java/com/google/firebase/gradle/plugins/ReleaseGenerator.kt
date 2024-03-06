@@ -1,20 +1,25 @@
-// Copyright 2021 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.google.firebase.gradle.plugins
 
-import com.google.common.collect.ImmutableList
 import java.io.File
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ListBranchCommand
 import org.eclipse.jgit.api.errors.GitAPIException
@@ -26,30 +31,91 @@ import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.findByType
 
+/**
+ * Contains output data from the Release Generator, published as release_report.json
+ *
+ * @property changesByLibraryName contains libs which have opted into the release, and their changes
+ * @property changedLibrariesWithNoChangelog contains libs not opted into the release, despite
+ * having changes
+ */
+@Serializable
+data class ReleaseReport(
+  val changesByLibraryName: Map<String, List<CommitDiff>>,
+  val changedLibrariesWithNoChangelog: Set<String>
+) {
+  companion object {
+    val formatter = Json { prettyPrint = true }
+  }
+
+  fun toFile(file: File) = file.also { it.writeText(formatter.encodeToString(this)) }
+
+  override fun toString() =
+    """
+      |# Release Report
+      |${
+      changesByLibraryName.entries.joinToString("\n") {
+      """
+      |## ${it.key}
+      
+      |${it.value.joinToString("\n") { it.toString() }}
+      """.trimMargin()
+    }
+  }
+      |
+      |## SDKs with changes, but no changelogs
+      |${changedLibrariesWithNoChangelog.joinToString("  \n")}
+    """
+      .trimMargin()
+}
+
+@Serializable
 data class CommitDiff(
   val commitId: String,
+  val prId: String,
   val author: String,
   val message: String,
+  val commitLink: String,
+  val prLink: String,
 ) {
-  constructor(
-    revCommit: RevCommit
-  ) : this(revCommit.id.name, revCommit.authorIdent.name, revCommit.fullMessage) {}
+  companion object {
+    // This is a meant to capture the PR number from PR Titles
+    // ex: "Fix a problem (#1234)" -> "1234"
+    private val PR_ID_EXTRACTOR = Regex(".*\\(#(\\d+)\\).*")
+
+    public fun fromRevCommit(commit: RevCommit): CommitDiff {
+      val commitId = commit.id.name
+      val prId =
+        PR_ID_EXTRACTOR.find(commit.fullMessage.split("\n").first())?.groupValues?.get(1) ?: ""
+      return CommitDiff(
+        commitId,
+        prId,
+        commit.authorIdent.name,
+        commit.fullMessage,
+        "https://github.com/firebase/firebase-android-sdk/commit/$commitId",
+        "https://github.com/firebase/firebase-android-sdk/pull/$prId"
+      )
+    }
+  }
 
   override fun toString(): String =
     """
       |* ${message.split("\n").first()}   
-      |  https://github.com/firebase/firebase-android-sdk/commit/${commitId}  [${author}]
+      |  [pr]($prLink) [commit]($commitLink)  [$author]
 
     """
       .trimMargin()
 }
 
 abstract class ReleaseGenerator : DefaultTask() {
+  companion object {
+    private val RELEASE_CHANGE_FILTER = "NO_RELEASE_CHANGE"
+  }
 
   @get:Input abstract val currentRelease: Property<String>
 
@@ -57,9 +123,21 @@ abstract class ReleaseGenerator : DefaultTask() {
 
   @get:Optional @get:Input abstract val printReleaseConfig: Property<String>
 
+  @get:Optional @get:InputFiles abstract val commitsToIgnoreFile: RegularFileProperty
+
+  @get:Internal
+  val commitsToIgnore: List<ObjectId>
+    get() =
+      commitsToIgnoreFile.asFileIfExistsOrNull()?.readLines()?.map { ObjectId.fromString(it) }
+        ?: emptyList()
+
   @get:OutputFile abstract val releaseConfigFile: RegularFileProperty
 
-  @get:OutputFile abstract val releaseReportFile: RegularFileProperty
+  @get:OutputFile abstract val releaseReportMdFile: RegularFileProperty
+
+  @get:OutputFile abstract val releaseReportJsonFile: RegularFileProperty
+
+  @get:Internal lateinit var libraryGroups: Map<String, List<FirebaseLibraryExtension>>
 
   @TaskAction
   @Throws(Exception::class)
@@ -81,33 +159,13 @@ abstract class ReleaseGenerator : DefaultTask() {
     val releaseConfig = ReleaseConfig(currentRelease.get(), libsToRelease.map { it.path })
     releaseConfig.toFile(releaseConfigFile.get().asFile)
 
-    val releaseReport = generateReleaseReport(changes, changedLibsWithNoChangelog)
+    val releaseReport = ReleaseReport(changes, changedLibsWithNoChangelog)
     if (printReleaseConfig.orNull.toBoolean()) {
-      project.logger.info(releaseReport)
+      project.logger.info(releaseReport.toString())
     }
-    writeReleaseReport(releaseReportFile.get().asFile, releaseReport)
+    releaseReportMdFile.get().asFile.writeText(releaseReport.toString())
+    releaseReportJsonFile.get().asFile.let { releaseReport.toFile(it) }
   }
-
-  private fun generateReleaseReport(
-    changes: Map<String, List<CommitDiff>>,
-    changedLibrariesWithNoChangelog: Set<String>
-  ) =
-    """
-      |# Release Report
-      |${
-            changes.entries.joinToString("\n") {
-                """
-      |## ${it.key}
-      
-      |${it.value.joinToString("\n") { it.toString() }}
-      """.trimMargin()
-            }
-        }
-      |
-      |## SDKs with changes, but no changelogs
-      |${changedLibrariesWithNoChangelog.joinToString("  \n")}
-    """
-      .trimMargin()
 
   private fun getChangesForLibraries(
     repo: Git,
@@ -140,10 +198,8 @@ abstract class ReleaseGenerator : DefaultTask() {
       .filter {
         checkDirChanges(repo, previousReleaseRef, currentReleaseRef, "${getRelativeDir(it)}/")
       }
-      .flatMap {
-        it.extensions.findByType<FirebaseLibraryExtension>()?.projectsToRelease?.map { it.path }
-          ?: emptyList()
-      }
+      .flatMap { libraryGroups.getOrDefault(it.firebaseLibrary.libraryGroupName, emptyList()) }
+      .map { it.path }
       .toSet()
 
   private fun getChangedChangelogs(
@@ -151,7 +207,7 @@ abstract class ReleaseGenerator : DefaultTask() {
     previousReleaseRef: ObjectId,
     currentReleaseRef: ObjectId,
     libraries: List<Project>
-  ) =
+  ): Set<Project> =
     libraries
       .filter { library ->
         checkDirChanges(
@@ -162,9 +218,9 @@ abstract class ReleaseGenerator : DefaultTask() {
         )
       }
       .flatMap {
-        it.extensions.findByType<FirebaseLibraryExtension>()?.projectsToRelease
-          ?: ImmutableList.of(it)
+        libraryGroups.getOrDefault(it.firebaseLibrary.libraryGroupName, listOf(it.firebaseLibrary))
       }
+      .map { it.project }
       .toSet()
 
   private fun checkDirChanges(
@@ -179,7 +235,10 @@ abstract class ReleaseGenerator : DefaultTask() {
       .addRange(previousReleaseRef, currentReleaseRef)
       .setMaxCount(10)
       .call()
-      .filter { !it.fullMessage.contains("NO_RELEASE_CHANGE") }
+      .filter {
+        !it.fullMessage.contains(RELEASE_CHANGE_FILTER) &&
+          !commitsToIgnore.any { ignore -> it.id == ignore }
+      }
       .isNotEmpty()
 
   private fun getDirChanges(
@@ -188,11 +247,19 @@ abstract class ReleaseGenerator : DefaultTask() {
     currentReleaseRef: ObjectId,
     directory: String
   ) =
-    repo.log().addPath(directory).addRange(previousReleaseRef, currentReleaseRef).call().map {
-      CommitDiff(it)
-    }
-
-  private fun writeReleaseReport(file: File, report: String) = file.writeText(report)
+    repo
+      .log()
+      .addPath(directory)
+      .addRange(previousReleaseRef, currentReleaseRef)
+      .call()
+      .filter {
+        !it.fullMessage.contains(RELEASE_CHANGE_FILTER) &&
+          !commitsToIgnore.any { ignore -> it.id == ignore }
+      }
+      .map { CommitDiff.fromRevCommit(it) }
 
   private fun getRelativeDir(project: Project) = project.path.substring(1).replace(':', '/')
 }
+
+fun RegularFileProperty.asFileIfExistsOrNull(): File? =
+  if (isPresent && asFile.get().exists()) asFile.get() else null

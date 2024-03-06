@@ -19,12 +19,14 @@ plugins {
 firebaseLibrary {
     publishSources = true
     publishJavadoc = false
+    publishReleaseNotes = false
 }
 
 android {
   val targetSdkVersion : Int by rootProject
   val minSdkVersion : Int by rootProject
   compileSdk = targetSdkVersion
+  namespace = "com.google.firebase.components"
   defaultConfig {
     minSdk = minSdkVersion
     targetSdk = targetSdkVersion
@@ -44,10 +46,10 @@ dependencies {
   implementation(libs.androidx.annotation)
   implementation(libs.errorprone.annotations)
 
-  testImplementation(libs.androidx.test.runner)
   testImplementation(libs.androidx.test.junit)
-  testImplementation(libs.robolectric)
+  testImplementation(libs.androidx.test.runner)
   testImplementation(libs.junit)
-  testImplementation(libs.truth)
   testImplementation(libs.mockito.core)
+  testImplementation(libs.robolectric)
+  testImplementation(libs.truth)
 }

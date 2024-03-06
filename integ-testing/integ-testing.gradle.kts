@@ -22,6 +22,7 @@ android {
   val minSdkVersion: Int by rootProject
 
   compileSdk = targetSdkVersion
+  namespace = "com.google.firebase.testing.integ"
 
   defaultConfig {
     minSdk = minSdkVersion
@@ -35,10 +36,10 @@ android {
 }
 
 dependencies {
-  implementation("com.google.firebase:firebase-common:20.3.2")
-  implementation("com.google.firebase:firebase-components:17.1.0")
-
-  implementation(libs.junit)
+  implementation("com.google.firebase:firebase-common-ktx:20.4.2")
+  implementation("com.google.firebase:firebase-common:20.4.2")
+  implementation("com.google.firebase:firebase-components:17.1.5")
   implementation(libs.androidx.test.runner)
+  implementation(libs.junit)
   implementation(libs.kotlin.coroutines.test)
 }

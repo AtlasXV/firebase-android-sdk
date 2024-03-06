@@ -18,9 +18,11 @@ plugins {
 
 firebaseLibrary{
     publishJavadoc = false
+    publishReleaseNotes = false
 }
 
 android {
+    namespace "com.google.android.datatransport"    
     compileSdkVersion project.targetSdkVersion
     defaultConfig {
         minSdkVersion 14

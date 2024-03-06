@@ -1,7 +1,11 @@
 {
-  "name": "Atlasv133",
-  "libraries": [
-    ":firebase-perf",
-    ":firebase-perf:ktx"
-  ]
+    "name": "m144",
+    "libraries": [
+        ":firebase-config",
+        ":firebase-config:ktx",
+        ":firebase-database",
+        ":firebase-database:ktx",
+        ":firebase-firestore",
+        ":firebase-firestore:ktx"
+    ]
 }
