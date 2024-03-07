@@ -9,6 +9,9 @@
         ":firebase-config",
         ":firebase-config:ktx",
         ":firebase-functions",
-        ":firebase-functions:ktx"
+        ":firebase-functions:ktx",
+        ":firebase-sessions",
+        ":firebase-installations",
+        ":firebase-installations:ktx"
     ]
 }
