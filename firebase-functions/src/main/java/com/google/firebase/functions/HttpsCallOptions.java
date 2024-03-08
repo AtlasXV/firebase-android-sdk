@@ -14,7 +14,6 @@
 
 package com.google.firebase.functions;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.firebase.functions.ktx.InterceptorFactory;
@@ -36,17 +35,16 @@ class HttpsCallOptions {
   private TimeUnit timeoutUnits = DEFAULT_TIMEOUT_UNITS;
 
   private final boolean limitedUseAppCheckTokens;
-  private final InterceptorFactory interceptorFactory;
+
+  @Nullable private InterceptorFactory interceptorFactory = null;
 
   /** Creates an (internal) HttpsCallOptions from the (external) {@link HttpsCallableOptions}. */
   HttpsCallOptions(HttpsCallableOptions publicCallableOptions) {
     this.limitedUseAppCheckTokens = publicCallableOptions.getLimitedUseAppCheckTokens();
-    this.interceptorFactory = publicCallableOptions.getInterceptorFactory();
   }
 
   HttpsCallOptions() {
     this.limitedUseAppCheckTokens = false;
-    this.interceptorFactory = null;
   }
 
   /**
@@ -73,8 +71,13 @@ class HttpsCallOptions {
     return limitedUseAppCheckTokens;
   }
 
+  @Nullable
   public InterceptorFactory getInterceptorFactory() {
     return interceptorFactory;
+  }
+
+  public void setInterceptorFactory(@Nullable InterceptorFactory interceptorFactory) {
+    this.interceptorFactory = interceptorFactory;
   }
 
   /** Creates a new OkHttpClient with these options applied to it. */
