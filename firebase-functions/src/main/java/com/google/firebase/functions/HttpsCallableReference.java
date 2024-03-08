@@ -17,6 +17,8 @@ package com.google.firebase.functions;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.functions.ktx.InterceptorFactory;
+
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
@@ -130,10 +132,12 @@ public class HttpsCallableReference {
    * Changes the timeout for calls from this instance of Functions. The default is 60 seconds.
    *
    * @param timeout The length of the timeout, in the given units.
-   * @param units The units for the specified timeout.
+   * @param units   The units for the specified timeout.
+   * @return
    */
-  public void setTimeout(long timeout, @NonNull TimeUnit units) {
+  public HttpsCallableReference setTimeout(long timeout, @NonNull TimeUnit units) {
     options.setTimeout(timeout, units);
+    return this;
   }
 
   /**
@@ -143,6 +147,11 @@ public class HttpsCallableReference {
    */
   public long getTimeout() {
     return options.getTimeout();
+  }
+
+  public HttpsCallableReference setInterceptorFactory(@Nullable InterceptorFactory interceptorFactory) {
+    options.setInterceptorFactory(interceptorFactory);
+    return this;
   }
 
   /**
