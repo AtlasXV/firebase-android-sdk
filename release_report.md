@@ -1,29 +1,70 @@
 # Release Report
 ## firebase-common
       
-* Pin firebase-common dependency in components (#5741)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5741) [commit](https://github.com/firebase/firebase-android-sdk/commit/181348967ab48c8222f9868ebb3afd09b4e3733e)  [Rodrigo Lazo]
+* RandomUtil added to firebase-common (#5818)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5818) [commit](https://github.com/firebase/firebase-android-sdk/commit/a7edffefa9cd4f45b5921db3fd2003101c38e2ef)  [Denver Coneybeare]
 
 ## firebase-common/ktx
       
 
+## firebase-crashlytics
+      
+* Force validation or rotation of FIDs (#5812)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5812) [commit](https://github.com/firebase/firebase-android-sdk/commit/c9fa46103ddf57c734908e831c195a8035bca764)  [Matthew Robertson]
+
+* Fix flaky test (#5805)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5805) [commit](https://github.com/firebase/firebase-android-sdk/commit/110d37e8eaec1eb15c95d7909edf910c05694b5f)  [Matthew Robertson]
+
+* Add missing changelog entries (#5792)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5792) [commit](https://github.com/firebase/firebase-android-sdk/commit/52c4bfc3820e1cb7e8e868a29d9f6b0f7016a06f)  [Daymon]
+
+## firebase-crashlytics-ndk
+      
+* Add missing changelog entries (#5792)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5792) [commit](https://github.com/firebase/firebase-android-sdk/commit/52c4bfc3820e1cb7e8e868a29d9f6b0f7016a06f)  [Daymon]
+
+## firebase-sessions
+      
+* Force validation or rotation of FIDs (#5812)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5812) [commit](https://github.com/firebase/firebase-android-sdk/commit/c9fa46103ddf57c734908e831c195a8035bca764)  [Matthew Robertson]
+
+* Fix flaky test (#5805)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5805) [commit](https://github.com/firebase/firebase-android-sdk/commit/110d37e8eaec1eb15c95d7909edf910c05694b5f)  [Matthew Robertson]
+
+* Add sessions to crashlytics library group. (#5787)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5787) [commit](https://github.com/firebase/firebase-android-sdk/commit/cbcbccc8281c68d5fe3665f04819fe58d0757100)  [Rodrigo Lazo]
+
+* Add test cases for when fid or authToken are null (#5784)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5784) [commit](https://github.com/firebase/firebase-android-sdk/commit/f3a6362e1059e61bd6a83f30b2e554ce1c4cff18)  [Matthew Robertson]
+
+## firebase-crashlytics/ktx
+      
+* Force validation or rotation of FIDs (#5812)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5812) [commit](https://github.com/firebase/firebase-android-sdk/commit/c9fa46103ddf57c734908e831c195a8035bca764)  [Matthew Robertson]
+
 ## firebase-firestore
       
-* Snapshot listener source from cache (#5690)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5690) [commit](https://github.com/firebase/firebase-android-sdk/commit/b77c2188e5ec7c53c2a955fc4663b301e6c98c83)  [Mila]
+* Move mieq composite index tests (#5729)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5729) [commit](https://github.com/firebase/firebase-android-sdk/commit/6c3fc2279d6db18db9e68df7caaaca7f63a13fbc)  [Mila]
+
+* Use long.compare since we are on API 19 now. (#5810)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5810) [commit](https://github.com/firebase/firebase-android-sdk/commit/9e0a82e37ba3eeb96bc9f033545457093f8e3e02)  [wu-hui]
+
+* Update javadoc (#5797)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5797) [commit](https://github.com/firebase/firebase-android-sdk/commit/e40b749c75cddbd915a040f4fd277e886ada668c)  [Mila]
 
 ## firebase-firestore/ktx
       
 
 ## firebase-inappmessaging
       
-* FIAM: Fix FirebaseInAppMessagingDisplayErrorListener not being called (#5719)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5719) [commit](https://github.com/firebase/firebase-android-sdk/commit/f419204d771bb5e3417d83239b92503601dbbb42)  [jadenlin-g]
+* Fix: FIAM Bad token exception (b/330727156) (#5804)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5804) [commit](https://github.com/firebase/firebase-android-sdk/commit/745367026b0ab8b46d1f77da4626cf390e10e3b2)  [Eldhose M Babu]
 
 ## firebase-inappmessaging-display
       
-* FIAM: Fix FirebaseInAppMessagingDisplayErrorListener not being called (#5719)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5719) [commit](https://github.com/firebase/firebase-android-sdk/commit/f419204d771bb5e3417d83239b92503601dbbb42)  [jadenlin-g]
+* Fix: FIAM Bad token exception (b/330727156) (#5804)   
+  [pr](https://github.com/firebase/firebase-android-sdk/pull/5804) [commit](https://github.com/firebase/firebase-android-sdk/commit/745367026b0ab8b46d1f77da4626cf390e10e3b2)  [Eldhose M Babu]
 
 ## firebase-inappmessaging/ktx
       
@@ -31,40 +72,7 @@
 ## firebase-inappmessaging-display/ktx
       
 
-## firebase-sessions
-      
-* Handle when the session lifecycle service binding fails (#5777)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5777) [commit](https://github.com/firebase/firebase-android-sdk/commit/1a13dff2a28176ca1b72e59842c6c6b289d0aeb4)  [Matthew Robertson]
-
-* Add auth token to sessions (#5716)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5716) [commit](https://github.com/firebase/firebase-android-sdk/commit/b5f152be8c95cf0c11e8e09e8d0a423f88b2b780)  [Matthew Robertson]
-
-## transport/transport-api
-      
-* Rename field for better readability (#5761)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5761) [commit](https://github.com/firebase/firebase-android-sdk/commit/0fc32a45181497e5ac17faef63f0c06847863b78)  [Rodrigo Lazo]
-
-* Add support for experimentid and cookie in transport (#5758)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5758) [commit](https://github.com/firebase/firebase-android-sdk/commit/32570d34698c43cce9f9ddff0845147f78162558)  [Rodrigo Lazo]
-
-## transport/transport-backend-cct
-      
-* Remove unused transport field (#5770)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5770) [commit](https://github.com/firebase/firebase-android-sdk/commit/df84f5f5ed209aaddd5a74bf911ad15df6b8e0c5)  [Rodrigo Lazo]
-
-* Rename field for better readability (#5761)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5761) [commit](https://github.com/firebase/firebase-android-sdk/commit/0fc32a45181497e5ac17faef63f0c06847863b78)  [Rodrigo Lazo]
-
-* Add support for experimentid and cookie in transport (#5758)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5758) [commit](https://github.com/firebase/firebase-android-sdk/commit/32570d34698c43cce9f9ddff0845147f78162558)  [Rodrigo Lazo]
-
-## transport/transport-runtime
-      
-* Rename field for better readability (#5761)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5761) [commit](https://github.com/firebase/firebase-android-sdk/commit/0fc32a45181497e5ac17faef63f0c06847863b78)  [Rodrigo Lazo]
-
-* Add support for experimentid and cookie in transport (#5758)   
-  [pr](https://github.com/firebase/firebase-android-sdk/pull/5758) [commit](https://github.com/firebase/firebase-android-sdk/commit/32570d34698c43cce9f9ddff0845147f78162558)  [Rodrigo Lazo]
-
 
 ## SDKs with changes, but no changelogs
+:transport:transport-backend-cct  
+:transport:transport-runtime
