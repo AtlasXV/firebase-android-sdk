@@ -1,5 +1,5 @@
 {
-    "name": "m144",
+    "name": "m146",
     "libraries": [
         ":firebase-crashlytics",
         ":firebase-crashlytics:ktx",
@@ -10,8 +10,6 @@
         ":firebase-config:ktx",
         ":firebase-functions",
         ":firebase-functions:ktx",
-        ":firebase-sessions",
-        ":firebase-installations",
-        ":firebase-installations:ktx"
+        ":firebase-sessions"
     ]
 }
