@@ -130,7 +130,7 @@ internal class PublisherStream(
       }
 
       val context = contextTask.result
-      val configuredClient = options.apply(client)
+      val configuredClient = options.apply(client, null)
       val requestBody =
         RequestBody.create(
           MediaType.parse("application/json"),

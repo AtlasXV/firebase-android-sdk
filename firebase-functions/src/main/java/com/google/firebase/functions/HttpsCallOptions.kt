@@ -14,6 +14,7 @@
 package com.google.firebase.functions
 
 import java.util.concurrent.TimeUnit
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 
 /** An internal class for keeping track of options applied to an HttpsCallableReference. */
@@ -22,6 +23,7 @@ internal class HttpsCallOptions {
   private var timeout = DEFAULT_TIMEOUT
   private var timeoutUnits = DEFAULT_TIMEOUT_UNITS
   @JvmField public val limitedUseAppCheckTokens: Boolean
+  private var interceptorFactory: InterceptorFactory? = null
 
   /** Creates an (internal) HttpsCallOptions from the (external) [HttpsCallableOptions]. */
   internal constructor(publicCallableOptions: HttpsCallableOptions) {
@@ -56,12 +58,25 @@ internal class HttpsCallOptions {
     return timeoutUnits.toMillis(timeout)
   }
 
+  fun getInterceptorFactory(): InterceptorFactory? {
+    return interceptorFactory
+  }
+
+  fun setInterceptorFactory(interceptorFactory: InterceptorFactory?) {
+    this.interceptorFactory = interceptorFactory
+  }
+
   /** Creates a new OkHttpClient with these options applied to it. */
-  internal fun apply(client: OkHttpClient): OkHttpClient {
+  internal fun apply(client: OkHttpClient, interceptor: Interceptor?): OkHttpClient {
     return client
       .newBuilder()
       .callTimeout(timeout, timeoutUnits)
       .readTimeout(timeout, timeoutUnits)
+      .apply {
+        if (interceptor != null) {
+          addInterceptor(interceptor)
+        }
+      }
       .build()
   }
 

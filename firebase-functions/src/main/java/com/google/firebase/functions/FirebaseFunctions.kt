@@ -228,7 +228,8 @@ internal constructor(
     body["data"] = encoded
     val bodyJSON = JSONObject(body)
     val contentType = MediaType.parse("application/json")
-    val requestBody = RequestBody.create(contentType, bodyJSON.toString())
+    val bodyJSONString = bodyJSON.toString()
+    val requestBody = RequestBody.create(contentType, bodyJSONString)
     var request = Request.Builder().url(url).post(requestBody)
     if (context!!.authToken != null) {
       request = request.header("Authorization", "Bearer " + context.authToken)
@@ -239,7 +240,9 @@ internal constructor(
     if (context.appCheckToken != null) {
       request = request.header("X-Firebase-AppCheck", context.appCheckToken)
     }
-    val callClient = options.apply(client)
+    val interceptorFactory = options.getInterceptorFactory()
+    val interceptor = interceptorFactory?.create(body, bodyJSONString)
+    val callClient = options.apply(client, interceptor)
     val call = callClient.newCall(request.build())
     val tcs = TaskCompletionSource<HttpsCallableResult?>()
     call.enqueue(

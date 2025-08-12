@@ -15,9 +15,9 @@ package com.google.firebase.functions
 
 import androidx.annotation.VisibleForTesting
 import com.google.android.gms.tasks.Task
+import org.reactivestreams.Publisher
 import java.net.URL
 import java.util.concurrent.TimeUnit
-import org.reactivestreams.Publisher
 
 /** A reference to a particular Callable HTTPS trigger in Cloud Functions. */
 public class HttpsCallableReference {
@@ -102,6 +102,11 @@ public class HttpsCallableReference {
     }
   }
 
+  public fun setInterceptorFactory(interceptorFactory: InterceptorFactory?): HttpsCallableReference {
+    options.setInterceptorFactory(interceptorFactory)
+    return this
+  }
+
   /**
    * Executes this HTTPS endpoint asynchronously without arguments.
    *
@@ -179,8 +184,9 @@ public class HttpsCallableReference {
    * @param timeout The length of the timeout, in the given units.
    * @param units The units for the specified timeout.
    */
-  public fun setTimeout(timeout: Long, units: TimeUnit) {
+  public fun setTimeout(timeout: Long, units: TimeUnit): HttpsCallableReference {
     options.setTimeout(timeout, units)
+    return this
   }
 
   public val timeout: Long
