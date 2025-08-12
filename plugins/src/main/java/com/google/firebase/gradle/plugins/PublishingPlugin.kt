@@ -594,7 +594,7 @@ abstract class PublishingPlugin : Plugin<Project> {
           )
 
         dependsOn(publishTask)
-        outputs.file(publishTask.map { it.repository.url })
+//        outputs.file(publishTask.map { it.repository.url })
       }
     }
 
