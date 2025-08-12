@@ -139,7 +139,7 @@ class FirebaseTestController(val rootDirectory: TemporaryFolder) {
    * @see createReleaseWithProjects
    */
   fun createReleaseWithConfig(release: ReleaseConfig) {
-    release.toFile(rootDirectory.newFile("release.json"))
+    release.toFile(rootDirectory.newFile("release-atlasv.json"))
   }
 
   /**

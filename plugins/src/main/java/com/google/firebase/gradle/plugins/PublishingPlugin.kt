@@ -760,7 +760,7 @@ abstract class PublishingPlugin : Plugin<Project> {
   }
 
   companion object {
-    const val RELEASE_CONFIG_FILE = "release.json"
+    const val RELEASE_CONFIG_FILE = "release-atlasv.json"
     const val RELEASE_REPORT_MD_FILE = "release_report.md"
     const val RELEASE_REPORT_JSON_FILE = "release_report.json"
     const val BOM_DIR_NAME = "bom"

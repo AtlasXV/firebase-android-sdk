@@ -18,7 +18,7 @@ package com.google.firebase.gradle.plugins
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-
+const val VERSION_SUFFIX = "Atlasv4"
 /**
  * Returns a map of library group names to the list of libraries that belong to that group.
  *
@@ -45,6 +45,9 @@ fun fixLibraryGroupVersions(libraryGroups: Map<String, List<FirebaseLibraryExten
     for (firebaseExtension in libraryGroup) {
       if (ModuleVersion.fromStringOrNull(firebaseExtension.project.version.toString()) == null) {
         firebaseExtension.project.version = maxVersion.toString()
+      }
+      if (!firebaseExtension.version.contains("Atlasv", ignoreCase = true)) {
+        firebaseExtension.project.version = "${firebaseExtension.version}-$VERSION_SUFFIX"
       }
     }
   }
