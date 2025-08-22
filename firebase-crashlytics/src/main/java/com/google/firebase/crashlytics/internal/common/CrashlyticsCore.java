@@ -27,6 +27,7 @@ import com.google.firebase.crashlytics.BuildConfig;
 import com.google.firebase.crashlytics.internal.CrashlyticsNativeComponent;
 import com.google.firebase.crashlytics.internal.Logger;
 import com.google.firebase.crashlytics.internal.RemoteConfigDeferredProxy;
+import com.google.firebase.crashlytics.internal.analytics.AnalyticsEventDispatcher;
 import com.google.firebase.crashlytics.internal.analytics.AnalyticsEventLogger;
 import com.google.firebase.crashlytics.internal.breadcrumbs.BreadcrumbSource;
 import com.google.firebase.crashlytics.internal.concurrency.CrashlyticsWorkers;
@@ -171,7 +172,8 @@ public class CrashlyticsCore {
               settingsProvider,
               onDemandCounter,
               sessionsSubscriber,
-              crashlyticsWorkers);
+              crashlyticsWorkers,
+              analyticsEventLogger);
 
       controller =
           new CrashlyticsController(

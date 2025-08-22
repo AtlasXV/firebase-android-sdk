@@ -1,6 +1,9 @@
 {
     "name": "m168",
     "libraries": [
-        ":firebase-functions"
+        ":firebase-functions",
+        ":firebase-crashlytics",
+        ":firebase-crashlytics-ndk",
+        ":firebase-sessions"
     ]
 }

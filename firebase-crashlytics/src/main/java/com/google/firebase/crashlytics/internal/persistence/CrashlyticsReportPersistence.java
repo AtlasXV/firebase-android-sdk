@@ -17,6 +17,8 @@ package com.google.firebase.crashlytics.internal.persistence;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.firebase.crashlytics.internal.Logger;
+import com.google.firebase.crashlytics.internal.analytics.AnalyticsEventDispatcher;
+import com.google.firebase.crashlytics.internal.analytics.AnalyticsEventLogger;
 import com.google.firebase.crashlytics.internal.common.CrashlyticsAppQualitySessionsSubscriber;
 import com.google.firebase.crashlytics.internal.common.CrashlyticsReportWithSessionId;
 import com.google.firebase.crashlytics.internal.metadata.UserMetadata;
@@ -80,7 +82,7 @@ public class CrashlyticsReportPersistence {
   private final FileStore fileStore;
   private final SettingsProvider settingsProvider;
   private final CrashlyticsAppQualitySessionsSubscriber sessionsSubscriber;
-
+  @Nullable private AnalyticsEventLogger analyticsEventLogger = null;
   public CrashlyticsReportPersistence(
       FileStore fileStore,
       SettingsProvider settingsProvider,
@@ -88,6 +90,15 @@ public class CrashlyticsReportPersistence {
     this.fileStore = fileStore;
     this.settingsProvider = settingsProvider;
     this.sessionsSubscriber = sessionsSubscriber;
+  }
+
+  public CrashlyticsReportPersistence(
+          FileStore fileStore,
+          SettingsProvider settingsProvider,
+          CrashlyticsAppQualitySessionsSubscriber sessionsSubscriber,
+          @Nullable AnalyticsEventLogger analyticsEventLogger) {
+    this(fileStore, settingsProvider, sessionsSubscriber);
+    this.analyticsEventLogger = analyticsEventLogger;
   }
 
   public void persistReport(@NonNull CrashlyticsReport report) {
@@ -137,6 +148,7 @@ public class CrashlyticsReportPersistence {
     final String json = TRANSFORM.eventToJson(event);
     final String fileName = generateEventFilename(eventCounter.getAndIncrement(), isHighPriority);
     try {
+      AnalyticsEventDispatcher.INSTANCE.dispatchReportPrePersist(analyticsEventLogger, event);
       writeTextFile(fileStore.getSessionFile(sessionId, fileName), json);
     } catch (IOException ex) {
       Logger.getLogger().w("Could not persist event for session " + sessionId, ex);
