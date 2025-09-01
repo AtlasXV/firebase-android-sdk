@@ -18,7 +18,7 @@ package com.google.firebase.gradle.plugins
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-const val VERSION_SUFFIX = "Atlasv10"
+const val VERSION_SUFFIX = "Atlasv11"
 /**
  * Returns a map of library group names to the list of libraries that belong to that group.
  *
