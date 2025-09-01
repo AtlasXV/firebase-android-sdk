@@ -334,6 +334,11 @@ private suspend fun validateResponse(response: HttpResponse) {
   if (message.contains("The prompt could not be submitted")) {
     throw PromptBlockedException(message)
   }
+  if (message.contains("genai config not found")) {
+    throw APINotConfiguredException(
+      "The Gemini Developer API is not enabled, to enable and configure, see https://firebase.google.com/docs/ai-logic/faq-and-troubleshooting?api=dev#error-genai-config-not-found"
+    )
+  }
   getServiceDisabledErrorDetailsOrNull(error)?.let {
     val errorMessage =
       if (it.metadata?.get("service") == "firebasevertexai.googleapis.com") {

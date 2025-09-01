@@ -61,6 +61,8 @@ internal constructor(message: String, cause: Throwable? = null) : RuntimeExcepti
               ContentBlockedException(cause.message ?: "", cause.cause)
             is com.google.firebase.ai.common.QuotaExceededException ->
               QuotaExceededException(cause.message ?: "", cause.cause)
+            is com.google.firebase.ai.common.APINotConfiguredException ->
+              APINotConfiguredException(cause.message ?: "", cause.cause)
             else -> UnknownException(cause.message ?: "", cause)
           }
         is TimeoutCancellationException ->
@@ -148,6 +150,16 @@ internal constructor(message: String, cause: Throwable? = null) :
 // TODO(rlazo): Add secondary constructor to pass through the message?
 public class UnsupportedUserLocationException internal constructor(cause: Throwable? = null) :
   FirebaseAIException("User location is not supported for the API use.", cause)
+
+/**
+ * The Firebase project has not been configured and enabled for the selected API.
+ *
+ * For the Gemini Developer API, see
+ * [steps](https://firebase.google.com/docs/ai-logic/faq-and-troubleshooting?api=dev#error-genai-config-not-found)
+ */
+public class APINotConfiguredException
+internal constructor(message: String, cause: Throwable? = null) :
+  FirebaseAIException(message, cause)
 
 /**
  * Some form of state occurred that shouldn't have.
